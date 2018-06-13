@@ -6,9 +6,9 @@ while True:
     start = time.time()
     os.system('gcloud compute instances start instance-1')
     end = time.time()
-    time.sleep(20)
+    time.sleep(13)
     if end - start > 13:
-        os.system('gcloud compute ssh chenbowen9612@instance-1 --command="source startup.txt')
+        os.system('gcloud compute ssh chenbowen9612@instance-1 --command="source startup.txt"')
     time.sleep(600)
 #os.system('gcloud compute instances start instance-1 & gcloud compute ssh chenbowen9612@instance-1 --command="bash"')
 #os.system('gcloud compute instances start instance-1 & gcloud compute ssh chenbowen9612@instance-1 --command="source startup.txt"')
