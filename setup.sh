@@ -29,23 +29,30 @@ rm Miniconda3-latest-Linux-x86_64.sh
 rm cudnn-9.0-linux-x64-v7.1.tgz
 mkdir -p ~/yt8m/code
 cd ~/yt8m/code
-git clone https://github.com/google/youtube-8m.git
-git clone https://github.com/antoine77340/Youtube-8M-WILLOW.git
-mv -f Youtube-8M-WILLOW/frame_level_models.py youtube-8m/frame_level_models.py
+git clone https://github.com/chenbowen/youtube-8m.git
+pip install tensorflow-gpu
+
+
+#git clone https://github.com/google/youtube-8m.git
+#git clone https://github.com/antoine77340/Youtube-8M-WILLOW.git
+#mv -f Youtube-8M-WILLOW/frame_level_models.py youtube-8m/frame_level_models.py
 cd youtube-8m
 conda install scipy -y
 vi ~/.vimrc
-set number
+iset number
 
-vi ~/startup.sh
-i#! /bin/bash
+#vi ~/startup.txt
+#i#! /bin/bash
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64"
 export CUDA_HOME=/usr/local/cuda
 source ~/.bashrc
+#source activate tensorflow
+cd miniconda3/bin
 source activate tensorflow
 cd yt8m/code/youtube-8m/
-
-chmod +x ~/startup.sh
+pip install tensorflow-gpu
+conda install scipy -y
+#chmod +x ~/startup.sh
 
 
 python train.py --train_data_pattern="gs://youtube8m-ml-us-east1/2/frame/train/train*.tfrecord" --model=NetVLADModelLF --train_dir ~/yt8m/v2/models/frame/NetVLADModelLF1 --frame_features --feature_names='rgb,audio' --feature_sizes='1024,128' --batch_size=80 --base_learning_rate=0.0002 --netvlad_cluster_size=256 --netvlad_hidden_size=1024 --moe_l2=1e-6 --iterations=300 --learning_rate_decay=0.8 --netvlad_relu=False --gating=True --moe_prob_gating=True --max_step=300000 --start_new_model
