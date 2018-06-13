@@ -69,12 +69,12 @@ mkdir -p ~/yt8m/v2/video
 cd ~/yt8m/v2/video
 curl data.yt8m.org/download.py | shard=1,100 partition=2/video/train mirror=us python
 curl data.yt8m.org/download.py | shard=1,100 partition=2/video/validate mirror=us python
-curl data.yt8m.org/download.py | shard=1,100 partition=2/video/test mirror=us python
+curl data.yt8m.org/download.py | shard=1,100 parztition=2/video/test mirror=us python
 
 # Frame-level
 mkdir -p ~/yt8m/v2/frame
 cd ~/yt8m/v2/frame
-curl data.yt8m.org/download.py | shard=1,100 partition=2/frame/train mirror=us python
+curl data.yt8m.org/download.py | shard=1,1000 partition=2/frame/train mirror=us python
 curl data.yt8m.org/download.py | shard=1,100 partition=2/frame/validate mirror=us python
 curl data.yt8m.org/download.py | shard=1,100 partition=2/frame/test mirror=us python
 
@@ -96,27 +96,18 @@ git clone https://github.com/google/youtube-8m.git
 
 #### Training on Video-Level Features
 ```
-python train.py --feature_names='mean_rgb,mean_audio' --feature_sizes='1024,128' --train_data_pattern=${HOME}/yt8m/v2/video/train*.tfrecord --train_dir ~/yt8m/v2/models/video/sample_model --start_new_model
-```
-The `--start_new_model` flag will re-train from scratch. If you want to continue
-training from the `train_dir`, drop this flag. After training, you can evaluate
-the model on the validation split:
-```
-python eval.py --eval_data_pattern=${HOME}/yt8m/v2/video/validate*.tfrecord --train_dir ~/yt8m/v2/models/video/sample_model
+python train.py --feature_names=mean_rgb,mean_audio --feature_sizes=1024,128 --train_data_pattern=C:/Users/utbow/yt8m/v2/video/train/*.tfrecord --train_dir C:/Users/utbow/yt8m/v2/models/video/moe_model_8192 --model=MoeModel --start_new_model --num_epochs 8 --num_readers 12 --batch_size 8192
+
+
+python eval.py --eval_data_pattern=C:/Users/utbow/yt8m/v2/video/train/validate*.tfrecord --train_dir C:/Users/utbow/yt8m/v2/models/video/moe_model --run_once
 ```
 
-Note: Above binary runs "forever" (i.e. keeps watching for updated model
-checkpoint and re-runs evals). To run once, pass flag `--run_once` It should
-print lines like:
-```
-INFO:tensorflow:examples_processed: 298 | global_step 10 | Batch Hit@1: 0.513 | Batch PERR: 0.359 | Batch Loss: 2452.698 | Examples_per_sec: 2708.994
-```
 
 If you are competing on Kaggle, you should do inference outputing a CSV (e.g.
 naming file as `kaggle_solution.csv`):
 
 ```
-python inference.py --train_dir ~/yt8m/v2/models/video/sample_model  --output_file=kaggle_solution.csv --input_data_pattern=${HOME}/yt8m/v2/video/test*.tfrecord
+python inference.py --train_dir C:/Users/utbow/yt8m/v2/models/video/moe_model  --output_file=kaggle_solution.csv --input_data_pattern=C:/Users/utbow/yt8m/v2/video/test*.tfrecord
 ```
 Then, upload `kaggle_solution.csv` to Kaggle via Submit Predictions or via [Kaggle API](https://github.com/Kaggle/kaggle-api). In addition, if you would like to
 be considered for the prize, then your model checkpoint must be under 1
@@ -135,12 +126,20 @@ Train using `train.py`, selecting a frame-level model (e.g.
 `--frame_features`. TLDR - frame-level features are compressed, and this flag
 uncompresses them.
 ```
-python train.py --frame_features --model=FrameLevelLogisticModel --feature_names='rgb,audio' --feature_sizes='1024,128' --train_data_pattern=${HOME}/yt8m/v2/frame/train*.tfrecord --train_dir ~/yt8m/v2/models/frame/sample_model --start_new_model
+python train.py --frame_features --model=FrameLevelLogisticModel --feature_names=rgb,audio --feature_sizes=1024,128 --train_data_pattern=B:/yt8m/v2/frame/train/train*.tfrecord --train_dir C:/Users/utbow/yt8m/v2/models/frame/sample_model --start_new_model
+
+python train.py --frame_features --model=LstmModel --feature_names=rgb,audio --feature_sizes=1024,128 --train_data_pattern=B:/yt8m/v2/frame/train/train*.tfrecord --train_dir C:/Users/utbow/yt8m/v2/models/frame/sample_LstmModel --start_new_model
+
+python train.py --frame_features --model=FrameLevelLogisticModel --feature_names=rgb,audio --feature_sizes=1024,128 --train_data_pattern=${HOME}/yt8m/v2/frame/train*.tfrecord --train_dir ~/yt8m/v2/models/frame/sample_model --start_new_model --num_gpu 2 --num_epochs 1 --num_readers 12
+
+python train.py --frame_features --model=LstmModel --feature_names=rgb,audio --feature_sizes=1024,128 --train_data_pattern=${HOME}/yt8m/v2/frame/train*.tfrecord --train_dir ~/yt8m/v2/models/frame/sample_LstmModel --start_new_model --num_gpu 2 --num_epochs 1 --batch_size 512
+
+python train.py --frame_features --model=DbofModel --feature_names=rgb,audio --feature_sizes=1024,128 --train_data_pattern=/mnt/disks/ssd/frame/train*.tfrecord --train_dir ~/yt8m/v2/models/frame/sample_DbofModel --start_new_model --num_gpu 2 --num_epochs 1 --batch_size 512
 ```
 
 Evaluate the model
 ```
-python eval.py --eval_data_pattern=${HOME}/yt8m/v2/frame/validate*.tfrecord --train_dir ~/yt8m/v2/models/frame/sample_model
+python eval.py --eval_data_pattern=B:/yt8m/v2/frame/validate*.tfrecord --train_dir C:/Users/utbow/yt8m/v2/models/frame/sample_model
 ```
 
 Produce CSV (`kaggle_solution.csv`) by doing inference:
@@ -180,8 +179,7 @@ m/n-th of the data.
 You can use Tensorboard to compare your frame-level or video-level models, like:
 
 ```sh
-MODELS_DIR=~/yt8m/v2/models
-tensorboard --logdir frame:${MODELS_DIR}/frame,video:${MODELS_DIR}/video
+tensorboard --logdir frame:C:/Users/utbow/yt8m/v2/models/frame,video:C:/Users/utbow/yt8m/v2/models/video
 ```
 We find it useful to keep the tensorboard instance always running, as we train
 and evaluate different models.
@@ -350,6 +348,13 @@ gcloud ml-engine local train \
 --package-path=youtube-8m --module-name=youtube-8m.train -- \
 --train_data_pattern='gs://youtube8m-ml/2/video/train/train*.tfrecord' \
 --train_dir=/tmp/yt8m_train --model=LogisticModel --start_new_model
+
+gcloud ml-engine local train ^
+--package-path=youtube-8m --module-name=youtube-8m.train -- ^
+--train_data_pattern='gs://youtube8m-ml/2/video/train/train*.tfrecord' ^
+--train_dir=/tmp/yt8m_train --model=LogisticModel --start_new_model
+
+gcloud ml-engine local train --package-path=youtube-8m --module-name=youtube-8m.train --  --train_data_pattern='gs://youtube8m-ml/2/video/train/train*.tfrecord' --train_dir=/tmp/yt8m_train --model=LogisticModel --start_new_model
 ```
 
 You might want to download some training shards locally to speed things up and
@@ -385,6 +390,19 @@ submit training $JOB_NAME \
 -- --train_data_pattern='gs://youtube8m-ml-us-east1/2/video/train/train*.tfrecord' \
 --model=LogisticModel \
 --train_dir=$BUCKET_NAME/yt8m_train_video_level_logistic_model
+
+
+JOB_NAME=yt8m_train_$(date +%Y%m%d_%H%M%S); gcloud --verbosity=debug ml-engine jobs \
+submit training $JOB_NAME \
+--package-path=youtube-8m --module-name=youtube-8m.train \
+--staging-bucket=$BUCKET_NAME --region=us-east1 \
+--config=youtube-8m/cloudml-gpu.yaml \
+--runtime-version=1.8 \
+-- --train_data_pattern='gs://youtube8m-ml-us-east1/2/frame/train/train*.tfrecord' \
+--model=DbofModel \
+--train_dir=$BUCKET_NAME/yt8m_train_DbofModel
+
+python train.py --frame_features --model=DbofModel --feature_names=rgb,audio --feature_sizes=1024,128 --train_data_pattern=/mnt/disks/ssd/frame/train*.tfrecord --train_dir ~/yt8m/v2/models/frame/sample_DbofModel --start_new_model --num_gpu 2 --num_epochs 1 --batch_size 512
 ```
 
 In the 'gsutil' command above, the 'package-path' flag refers to the directory
@@ -501,7 +519,7 @@ submit training $JOB_NAME \
 --package-path=youtube-8m --module-name=youtube-8m.train \
 --staging-bucket=$BUCKET_NAME --region=us-east1 \
 --config=youtube-8m/cloudml-gpu.yaml \
--- --train_data_pattern='gs://youtube8m-ml-us-east1/2/frame/train/train*.tfrecord' \
+-- --train_data_pattern='gs://youtube8m-ml-us-east1/1/frame_level/train/train*.tfrecord' \
 --frame_features=True --model=FrameLevelLogisticModel --feature_names="rgb" \
 --feature_sizes="1024" --batch_size=128 \
 --train_dir=$BUCKET_NAME/yt8m_train_frame_level_logistic_model
