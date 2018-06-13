@@ -42,20 +42,13 @@ vi ~/.vimrc
 iset number
 
 #vi ~/startup.txt
-#i#! /bin/bash
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64"
 export CUDA_HOME=/usr/local/cuda
-source ~/.bashrc
-#source activate tensorflow
-cd miniconda3/bin
-source activate tensorflow
-cd ~/yt8m/code/youtube-8m/
-pip install tensorflow-gpu
-conda install scipy -y
-#chmod +x ~/startup.sh
+#source ~/.bashrc
+source ~/miniconda3/bin/activate tensorflow
 
 
-python train.py --train_data_pattern="gs://youtube8m-ml-us-east1/2/frame/train/train*.tfrecord" --model=NetVLADModelLF --train_dir ~/yt8m/v2/models/frame/NetVLADModelLF1 --frame_features --feature_names='rgb,audio' --feature_sizes='1024,128' --batch_size=80 --base_learning_rate=0.0002 --netvlad_cluster_size=256 --netvlad_hidden_size=1024 --moe_l2=1e-6 --iterations=300 --learning_rate_decay=0.8 --netvlad_relu=False --gating=True --moe_prob_gating=True --max_step=300000 --export_model_steps=2000 --start_new_model
+python ~/yt8m/code/youtube-8m/train.py --train_data_pattern="gs://youtube8m-ml-us-east1/2/frame/train/train*.tfrecord" --model=NetVLADModelLF --train_dir ~/yt8m/v2/models/frame/NetVLADModelLF1 --frame_features --feature_names='rgb,audio' --feature_sizes='1024,128' --batch_size=80 --base_learning_rate=0.0002 --netvlad_cluster_size=256 --netvlad_hidden_size=1024 --moe_l2=1e-6 --iterations=300 --learning_rate_decay=0.8 --netvlad_relu=False --gating=True --moe_prob_gating=True --max_step=300000 --export_model_steps=2000 --start_new_model
 
 
 
