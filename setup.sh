@@ -49,7 +49,7 @@ source ~/.bashrc
 #source activate tensorflow
 cd miniconda3/bin
 source activate tensorflow
-cd yt8m/code/youtube-8m/
+cd ~/yt8m/code/youtube-8m/
 pip install tensorflow-gpu
 conda install scipy -y
 #chmod +x ~/startup.sh
