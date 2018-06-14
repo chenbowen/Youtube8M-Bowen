@@ -13,6 +13,7 @@
 # limitations under the License.
 """Binary for training Tensorflow models on the YouTube-8M dataset."""
 
+
 import json
 import os
 import time
@@ -133,7 +134,7 @@ def validate_class_name(flag_value, category, modules, expected_superclass):
   raise flags.FlagsError("Unable to find %s '%s'." % (category, flag_value))
 
 def get_input_data_tensors(reader,
-                           data_pattern,
+                           lst_data_pattern,
                            batch_size=1000,
                            num_epochs=None,
                            num_readers=1):
@@ -141,7 +142,7 @@ def get_input_data_tensors(reader,
 
   Args:
     reader: A class which parses the training data.
-    data_pattern: A 'glob' style path to the data files.
+    lst_data_pattern: A list of 'glob' style paths to the data files.
     batch_size: How many examples to process at a time.
     num_epochs: How many passes to make over the training data. Set to 'None'
                 to run indefinitely.
@@ -157,7 +158,9 @@ def get_input_data_tensors(reader,
   """
   logging.info("Using batch size of " + str(batch_size) + " for training.")
   with tf.name_scope("train_input"):
-    files = gfile.Glob(data_pattern)
+    files = []
+    for data_pattern in lst_data_pattern:
+      files.extend(gfile.Glob(data_pattern))
     if not files:
       raise IOError("Unable to find training files. data_pattern='" +
                     data_pattern + "'.")
@@ -224,6 +227,7 @@ def build_graph(reader,
   local_device_protos = device_lib.list_local_devices()
   gpus = [x.name for x in local_device_protos if x.device_type == 'GPU']
   gpus = gpus[:FLAGS.num_gpu]
+  #gpus = gpus[-1:]
   num_gpus = len(gpus)
 
   if num_gpus > 0:
@@ -247,12 +251,11 @@ def build_graph(reader,
   unused_video_id, model_input_raw, labels_batch, num_frames = (
       get_input_data_tensors(
           reader,
-          train_data_pattern,
+          train_data_pattern.split(','),
           batch_size=batch_size * num_towers,
           num_readers=num_readers,
           num_epochs=num_epochs))
   tf.summary.histogram("model/input_raw", model_input_raw)
-
   feature_dim = len(model_input_raw.get_shape()) - 1
 
   model_input = tf.nn.l2_normalize(model_input_raw, feature_dim)
@@ -260,21 +263,22 @@ def build_graph(reader,
   tower_inputs = tf.split(model_input, num_towers)
   tower_labels = tf.split(labels_batch, num_towers)
   tower_num_frames = tf.split(num_frames, num_towers)
+
   tower_gradients = []
   tower_predictions = []
   tower_label_losses = []
   tower_reg_losses = []
   for i in range(num_towers):
-    # For some reason these 'with' statements can't be combined onto the same
-    # line. They have to be nested.
     with tf.device(device_string % i):
       with (tf.variable_scope(("tower"), reuse=True if i > 0 else None)):
         with (slim.arg_scope([slim.model_variable, slim.variable], device="/cpu:0" if num_gpus!=1 else "/gpu:0")):
+          logging.info('building graph with ' + device_string % i)
           result = model.create_model(
             tower_inputs[i],
             num_frames=tower_num_frames[i],
             vocab_size=reader.num_classes,
             labels=tower_labels[i])
+          
           for variable in slim.get_model_variables():
             tf.summary.histogram(variable.op.name, variable)
 
@@ -422,6 +426,7 @@ class Trainer(object):
         predictions = tf.get_collection("predictions")[0]
         labels = tf.get_collection("labels")[0]
         train_op = tf.get_collection("train_op")[0]
+        num_frames = tf.get_collection("num_frames")[0]
         init_op = tf.global_variables_initializer()
 
     sv = tf.train.Supervisor(
@@ -442,6 +447,7 @@ class Trainer(object):
           batch_start_time = time.time()
           _, global_step_val, loss_val, predictions_val, labels_val = sess.run(
               [train_op, global_step, loss, predictions, labels])
+          #print(sess.run(num_frames))
           seconds_per_batch = time.time() - batch_start_time
           examples_per_second = labels_val.shape[0] / seconds_per_batch
 
