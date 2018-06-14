@@ -1,31 +1,14 @@
-# YouTube-8M Tensorflow Starter Code
-
-This repo contains starter code for training and evaluating machine learning
-models over the [YouTube-8M](https://research.google.com/youtube8m/) dataset. This is the starter code for our [2nd Youtube8M Video Understanding Challenge on Kaggle](https://www.kaggle.com/c/youtube8m-2018) and part of the European Conference on Computer Vision (ECCV) 2018 selected workshop session. 
-The code gives an end-to-end working example for reading the dataset, training a
-TensorFlow model, and evaluating the performance of the model. Out of the box,
-you can train several [model architectures](#overview-of-models) over either
-frame-level or video-level features. The code can easily be extended to train
-your own custom-defined models.
+# YouTube-8M-Bowen
 
 ## Table of Contents
-* [Running on Your Own Machine](#running-on-your-own-machine)
-   * [Requirements](#requirements-1)
-   * [Training on Video-Level Features](#training-on-video-level-features)
-   * [Evaluation and Inference](#evaluation-and-inference)
-   * [Using Frame-Level Features](#using-frame-level-features)
-   * [Using Audio Features](#using-audio-features)
-   * [Using GPUs](#using-gpus)
-   * [Ground-Truth Label Files](#ground-truth-label-files)
-* [Running on Google's Cloud Machine Learning Platform](#running-on-googles-cloud-machine-learning-platform)
-   * [Requirements](#requirements-1)
-   * [Testing Locally](#testing-locally)
-   * [Training on the Cloud over Video-Level Features](#training-on-video-level-features)
-   * [Evaluation and Inference](#evaluation-and-inference-1)
-   * [Accessing Files on Google Cloud](#accessing-files-on-google-cloud)
-   * [Using Frame-Level Features](#using-frame-level-features-1)
-   * [Using Audio Features](#using-audio-features-1)
-   * [Using Larger Machine Types](#using-larger-machine-types)
+* [Requirements](#requirements-1)
+* [Training on Video-Level Features](#training-on-video-level-features)
+* [Evaluation and Inference](#evaluation-and-inference)
+* [Using Frame-Level Features](#using-frame-level-features)
+* [Using Audio Features](#using-audio-features)
+* [Using GPUs](#using-gpus)
+* [Ground-Truth Label Files](#ground-truth-label-files)
+* [Accessing Files on Google Cloud](#accessing-files-on-google-cloud)
 * [Overview of Models](#overview-of-models)
    * [Video-Level Models](#video-level-models)
    * [Frame-Level Models](#frame-level-models)
@@ -36,25 +19,7 @@ your own custom-defined models.
    * [Inference](#inference)
    * [Misc](#misc)
 * [Training without this Starter Code](#training-without-this-starter-code)
-* [About This Project](#about-this-project)
 
-
-## Running on Your Own Machine
-
-### Requirements
-
-The starter code requires Tensorflow. If you haven't installed it yet, follow
-the instructions on [tensorflow.org](https://www.tensorflow.org/install/).
-This code has been tested with Tensorflow 1.8. Going forward, we will continue
-to target the latest released version of Tensorflow.
-
-Please verify that you have Python 2.7+ and Tensorflow 1.8 or higher
-installed by running the following commands:
-
-```sh
-python --version
-python -c 'import tensorflow as tf; print(tf.__version__)'
-```
 
 ### Downloading a fraction of the dataset
 You can find complete instructions for downloading the dataset on the
@@ -667,7 +632,3 @@ python inference.py --input_model_tgz=/path/to/your.tgz --output_file=kaggle_sol
 
 Make sure to replace `video` with `frame`, if your model is a frame-level model.
 
-## About This Project
-This project is meant help people quickly get started working with the
-[YouTube-8M](https://research.google.com/youtube8m/) dataset.
-This is not an official Google product.
