@@ -32,6 +32,7 @@ from tensorflow import gfile
 from tensorflow import logging
 from tensorflow.python.client import device_lib
 import utils
+from random import shuffle
 
 FLAGS = flags.FLAGS
 
@@ -158,9 +159,21 @@ def get_input_data_tensors(reader,
   """
   logging.info("Using batch size of " + str(batch_size) + " for training.")
   with tf.name_scope("train_input"):
-    files = []
-    for data_pattern in lst_data_pattern:
-      files.extend(gfile.Glob(data_pattern))
+    
+    #
+    # Assume lst_data_pattern = [train_data, validation_data]
+    # Todo: to be modified
+    #
+    train_data_pattern, validate_data_pattern = lst_data_pattern
+    random.seed(9612)
+
+    files = gfile.Glob(train_data_pattern)
+    validate_file_list = gfile.Glob(validate_data_pattern)
+    shuffle(validate_data_list)
+    NUM_VALIDATION_FILES = 40
+    files.extend(validate_file_list[:-NUM_VALIDATION_FILES])
+    
+
     if not files:
       raise IOError("Unable to find training files. data_pattern='" +
                     data_pattern + "'.")
