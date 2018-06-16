@@ -29,7 +29,7 @@ from tensorflow import flags
 from tensorflow import gfile
 from tensorflow import logging
 import utils
-from random import shuffle
+import random
 
 FLAGS = flags.FLAGS
 
@@ -84,7 +84,7 @@ def get_input_evaluation_tensors(reader,
   with tf.name_scope("eval_input"):
     random.seed(9612)
     validate_file_list = gfile.Glob(data_pattern)
-    shuffle(validate_data_list)
+    random.shuffle(validate_data_list)
     NUM_VALIDATION_FILES = 40
     files = validate_file_list[-NUM_VALIDATION_FILES:]
 

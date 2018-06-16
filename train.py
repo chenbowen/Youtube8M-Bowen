@@ -32,7 +32,7 @@ from tensorflow import gfile
 from tensorflow import logging
 from tensorflow.python.client import device_lib
 import utils
-from random import shuffle
+import random
 
 FLAGS = flags.FLAGS
 
@@ -169,7 +169,7 @@ def get_input_data_tensors(reader,
 
     files = gfile.Glob(train_data_pattern)
     validate_file_list = gfile.Glob(validate_data_pattern)
-    shuffle(validate_data_list)
+    random.shuffle(validate_data_list)
     NUM_VALIDATION_FILES = 40
     files.extend(validate_file_list[:-NUM_VALIDATION_FILES])
     
