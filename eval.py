@@ -84,7 +84,7 @@ def get_input_evaluation_tensors(reader,
   with tf.name_scope("eval_input"):
     random.seed(9612)
     validate_file_list = gfile.Glob(data_pattern)
-    random.shuffle(validate_data_list)
+    random.shuffle(validate_file_list)
     NUM_VALIDATION_FILES = 40
     files = validate_file_list[-NUM_VALIDATION_FILES:]
 
