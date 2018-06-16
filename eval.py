@@ -29,6 +29,7 @@ from tensorflow import flags
 from tensorflow import gfile
 from tensorflow import logging
 import utils
+from random import shuffle
 
 FLAGS = flags.FLAGS
 
