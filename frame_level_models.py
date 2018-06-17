@@ -137,7 +137,7 @@ class LightVLAD():
         self.max_frames = max_frames
         self.is_training = is_training
         self.add_batch_norm = add_batch_norm
-        self.cluster_size = cluster_size
+        self.cluster_size = int(cluster_size)
 
     def forward(self,reshaped_input):
 
