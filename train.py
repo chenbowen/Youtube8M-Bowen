@@ -170,7 +170,7 @@ def get_input_data_tensors(reader,
     files = gfile.Glob(train_data_pattern)
     validate_file_list = gfile.Glob(validate_data_pattern)
     random.shuffle(validate_data_list)
-    NUM_VALIDATION_FILES = 40
+    NUM_VALIDATION_FILES = 60
     files.extend(validate_file_list[:-NUM_VALIDATION_FILES])
     
 

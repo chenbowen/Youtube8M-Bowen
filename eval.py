@@ -85,7 +85,7 @@ def get_input_evaluation_tensors(reader,
     random.seed(9612)
     validate_file_list = gfile.Glob(data_pattern)
     random.shuffle(validate_file_list)
-    NUM_VALIDATION_FILES = 40
+    NUM_VALIDATION_FILES = 60
     files = validate_file_list[-NUM_VALIDATION_FILES:]
 
     if not files:
