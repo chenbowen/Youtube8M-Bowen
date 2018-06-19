@@ -33,6 +33,7 @@ from tensorflow import logging
 from tensorflow.python.client import device_lib
 import utils
 import random
+from tensorflow.contrib.model_pruning.python import pruning
 
 FLAGS = flags.FLAGS
 
@@ -94,7 +95,8 @@ if __name__ == "__main__":
   flags.DEFINE_integer("export_model_steps", 1000,
                        "The period, in number of steps, with which the model "
                        "is exported for batch prediction.")
-
+  flags.DEFINE_string('pruning_hparams', '',
+                        "Comma separated list of pruning-related hyperparameters")
   # Other flags.
   flags.DEFINE_integer("num_readers", 8,
                        "How many threads to use for reading input files.")
@@ -441,7 +443,9 @@ class Trainer(object):
         train_op = tf.get_collection("train_op")[0]
         num_frames = tf.get_collection("num_frames")[0]
         init_op = tf.global_variables_initializer()
-
+        pruning_hparams = pruning.get_pruning_hparams().parse(FLAGS.pruning_hparams)
+        p = pruning.Pruning(pruning_hparams, global_step=global_step)
+        mask_update_op = p.conditional_mask_update_op()
     sv = tf.train.Supervisor(
         graph,
         logdir=self.train_dir,
@@ -460,10 +464,10 @@ class Trainer(object):
           batch_start_time = time.time()
           _, global_step_val, loss_val, predictions_val, labels_val = sess.run(
               [train_op, global_step, loss, predictions, labels])
-          #print(sess.run(num_frames))
           seconds_per_batch = time.time() - batch_start_time
           examples_per_second = labels_val.shape[0] / seconds_per_batch
-
+          # Update the masks by running the mask_update_op
+          mon_sess.run(mask_update_op)
           if self.max_steps and self.max_steps <= global_step_val:
             self.max_steps_reached = True
 

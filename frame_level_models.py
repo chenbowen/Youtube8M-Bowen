@@ -22,6 +22,7 @@ import tensorflow as tf
 import model_utils as utils
 
 import tensorflow.contrib.slim as slim
+from tensorflow.contrib.model_pruning.python import pruning
 from tensorflow import flags
 
 import scipy.io as sio
@@ -189,14 +190,12 @@ class NetVLAD():
         self.cluster_size = int(cluster_size)
 
     def forward(self,reshaped_input):
-
-
         cluster_weights = tf.get_variable("cluster_weights",
               [self.feature_size, self.cluster_size],
               initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(self.feature_size)))
        
         tf.summary.histogram("cluster_weights", cluster_weights)
-        activation = tf.matmul(reshaped_input, cluster_weights)
+        activation = tf.matmul(reshaped_input, pruning.apply_mask(cluster_weights))
         
         if self.add_batch_norm:
           activation = slim.batch_norm(
@@ -223,7 +222,7 @@ class NetVLAD():
             [1,self.feature_size, self.cluster_size],
             initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(self.feature_size)))
         
-        a = tf.multiply(a_sum,cluster_weights2)
+        a = tf.multiply(a_sum, pruning.apply_mask(cluster_weights2))
         
         activation = tf.transpose(activation,perm=[0,2,1])
         
@@ -231,10 +230,7 @@ class NetVLAD():
         vlad = tf.matmul(activation,reshaped_input)
         vlad = tf.transpose(vlad,perm=[0,2,1])
         vlad = tf.subtract(vlad,a)
-        
-
         vlad = tf.nn.l2_normalize(vlad,1)
-
         vlad = tf.reshape(vlad,[-1,self.cluster_size*self.feature_size])
         vlad = tf.nn.l2_normalize(vlad,1)
 
@@ -674,7 +670,7 @@ class NetVLADModelLF(models.BaseModel):
       [vlad_dim, hidden1_size],
       initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(cluster_size)))
        
-    activation = tf.matmul(vlad, hidden1_weights)
+    activation = tf.matmul(vlad, pruning.apply_mask(hidden1_weights))
 
     if add_batch_norm and relu:
       activation = slim.batch_norm(
@@ -691,7 +687,7 @@ class NetVLADModelLF(models.BaseModel):
       tf.summary.histogram("hidden1_biases", hidden1_biases)
       activation += hidden1_biases
    
-    if relu:
+    if relu: 
       activation = tf.nn.relu6(activation)
    
 
@@ -700,7 +696,7 @@ class NetVLADModelLF(models.BaseModel):
           [hidden1_size, hidden1_size],
           initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
         
-        gates = tf.matmul(activation, gating_weights)
+        gates = tf.matmul(activation, pruning.apply_mask(gating_weights))
  
         if remove_diag:
             #removes diagonals coefficients
