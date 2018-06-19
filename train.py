@@ -442,10 +442,11 @@ class Trainer(object):
         labels = tf.get_collection("labels")[0]
         train_op = tf.get_collection("train_op")[0]
         num_frames = tf.get_collection("num_frames")[0]
-        init_op = tf.global_variables_initializer()
         pruning_hparams = pruning.get_pruning_hparams().parse(FLAGS.pruning_hparams)
         p = pruning.Pruning(pruning_hparams, global_step=global_step)
         mask_update_op = p.conditional_mask_update_op()
+        init_op = tf.global_variables_initializer()
+        
     sv = tf.train.Supervisor(
         graph,
         logdir=self.train_dir,
