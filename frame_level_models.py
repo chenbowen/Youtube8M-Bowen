@@ -190,12 +190,13 @@ class NetVLAD():
         self.cluster_size = int(cluster_size)
 
     def forward(self,reshaped_input):
-        cluster_weights = tf.get_variable("cluster_weights",
-              [self.feature_size, self.cluster_size],
-              initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(self.feature_size)))
-       
-        tf.summary.histogram("cluster_weights", cluster_weights)
-        activation = tf.matmul(reshaped_input, pruning.apply_mask(cluster_weights))
+        with tf.variable_scope('conv2') as scope:
+          cluster_weights = tf.get_variable("cluster_weights",
+                [self.feature_size, self.cluster_size],
+                initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(self.feature_size)))
+         
+          tf.summary.histogram("cluster_weights", cluster_weights)
+          activation = tf.matmul(reshaped_input, pruning.apply_mask(cluster_weights, scope))
         
         if self.add_batch_norm:
           activation = slim.batch_norm(
@@ -217,12 +218,12 @@ class NetVLAD():
         activation = tf.reshape(activation, [-1, self.max_frames, self.cluster_size])
 
         a_sum = tf.reduce_sum(activation,-2,keep_dims=True)
-
-        cluster_weights2 = tf.get_variable("cluster_weights2",
-            [1,self.feature_size, self.cluster_size],
-            initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(self.feature_size)))
-        
-        a = tf.multiply(a_sum, pruning.apply_mask(cluster_weights2))
+        with tf.variable_scope('cluster_weights2') as scope:
+            cluster_weights2 = tf.get_variable("cluster_weights2",
+                [1,self.feature_size, self.cluster_size],
+                initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(self.feature_size)))
+            
+            a = tf.multiply(a_sum, pruning.apply_mask(cluster_weights2, scope))
         
         activation = tf.transpose(activation,perm=[0,2,1])
         
@@ -665,12 +666,13 @@ class NetVLADModelLF(models.BaseModel):
 
     vlad = tf.concat([vlad_video, vlad_audio],1)
 
-    vlad_dim = vlad.get_shape().as_list()[1] 
-    hidden1_weights = tf.get_variable("hidden1_weights",
-      [vlad_dim, hidden1_size],
-      initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(cluster_size)))
-       
-    activation = tf.matmul(vlad, pruning.apply_mask(hidden1_weights))
+    vlad_dim = vlad.get_shape().as_list()[1]
+    with tf.variable_scope('hidden1_weights') as scope:
+        hidden1_weights = tf.get_variable("hidden1_weights",
+          [vlad_dim, hidden1_size],
+          initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(cluster_size)))
+           
+        activation = tf.matmul(vlad, pruning.apply_mask(hidden1_weights, scope))
 
     if add_batch_norm and relu:
       activation = slim.batch_norm(
@@ -692,11 +694,12 @@ class NetVLADModelLF(models.BaseModel):
    
 
     if gating:
-        gating_weights = tf.get_variable("gating_weights_2",
-          [hidden1_size, hidden1_size],
-          initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
-        
-        gates = tf.matmul(activation, pruning.apply_mask(gating_weights))
+        with tf.variable_scope('gating_weights') as scope:
+            gating_weights = tf.get_variable("gating_weights_2",
+              [hidden1_size, hidden1_size],
+              initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
+            
+            gates = tf.matmul(activation, pruning.apply_mask(gating_weights))
  
         if remove_diag:
             #removes diagonals coefficients
