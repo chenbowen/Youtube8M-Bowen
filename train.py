@@ -467,7 +467,7 @@ class Trainer(object):
           seconds_per_batch = time.time() - batch_start_time
           examples_per_second = labels_val.shape[0] / seconds_per_batch
           # Update the masks by running the mask_update_op
-          mon_sess.run(mask_update_op)
+          sess.run(mask_update_op)
           if self.max_steps and self.max_steps <= global_step_val:
             self.max_steps_reached = True
 
