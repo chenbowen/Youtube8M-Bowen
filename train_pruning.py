@@ -347,6 +347,9 @@ def build_graph(reader,
 
   train_op = optimizer.apply_gradients(merged_gradients, global_step=global_step)
 
+  pruning_hparams = pruning.get_pruning_hparams().parse(FLAGS.pruning_hparams)
+  p = pruning.Pruning(pruning_hparams, global_step=global_step)
+  mask_update_op = p.conditional_mask_update_op()
   tf.add_to_collection("global_step", global_step)
   tf.add_to_collection("loss", label_loss)
   tf.add_to_collection("predictions", tf.concat(tower_predictions, 0))
@@ -355,6 +358,7 @@ def build_graph(reader,
   tf.add_to_collection("num_frames", num_frames)
   tf.add_to_collection("labels", tf.cast(labels_batch, tf.float32))
   tf.add_to_collection("train_op", train_op)
+  tf.add_to_collection('mask_update_op', mask_update_op)
 
 
 class Trainer(object):
@@ -442,6 +446,8 @@ class Trainer(object):
         labels = tf.get_collection("labels")[0]
         train_op = tf.get_collection("train_op")[0]
         num_frames = tf.get_collection("num_frames")[0]
+        
+        
         init_op = tf.global_variables_initializer()
         
     sv = tf.train.Supervisor(
@@ -464,6 +470,8 @@ class Trainer(object):
               [train_op, global_step, loss, predictions, labels])
           seconds_per_batch = time.time() - batch_start_time
           examples_per_second = labels_val.shape[0] / seconds_per_batch
+          # Update the masks by running the mask_update_op
+          sess.run(mask_update_op)
           if self.max_steps and self.max_steps <= global_step_val:
             self.max_steps_reached = True
 

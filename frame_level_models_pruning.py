@@ -202,7 +202,7 @@ class NetVLAD():
               training=self.is_training)
          
           tf.summary.histogram("cluster_weights", cluster_weights)
-          activation = tf.matmul(reshaped_input, cluster_weights)
+          activation = tf.matmul(reshaped_input, pruning.apply_mask(cluster_weights, scope))
         
         if self.add_batch_norm:
           activation = slim.batch_norm(
@@ -234,7 +234,7 @@ class NetVLAD():
               noise_shape=None,
               seed=9612,
               training=self.is_training)
-            a = tf.multiply(a_sum, cluster_weights2)
+            a = tf.multiply(a_sum, pruning.apply_mask(cluster_weights2, scope))
         
         activation = tf.transpose(activation,perm=[0,2,1])
         
@@ -688,7 +688,7 @@ class NetVLADModelLF(models.BaseModel):
               noise_shape=None,
               seed=9612,
               training=is_training)
-        activation = tf.matmul(vlad, hidden1_weights)
+        activation = tf.matmul(vlad, pruning.apply_mask(hidden1_weights, scope))
 
     if add_batch_norm and relu:
       activation = slim.batch_norm(
@@ -720,7 +720,7 @@ class NetVLADModelLF(models.BaseModel):
               noise_shape=None,
               seed=9612,
               training=is_training)
-            gates = tf.matmul(activation, gating_weights)
+            gates = tf.matmul(activation, pruning.apply_mask(gating_weights))
  
         if remove_diag:
             #removes diagonals coefficients
