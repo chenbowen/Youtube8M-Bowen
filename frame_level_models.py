@@ -687,7 +687,7 @@ class NetVLADModelLF(models.BaseModel):
               rate=0.5,
               noise_shape=None,
               seed=9612,
-              training=self.is_training)
+              training=is_training)
         activation = tf.matmul(vlad, pruning.apply_mask(hidden1_weights, scope))
 
     if add_batch_norm and relu:
@@ -719,7 +719,7 @@ class NetVLADModelLF(models.BaseModel):
               rate=0.5,
               noise_shape=None,
               seed=9612,
-              training=self.is_training)
+              training=is_training)
             gates = tf.matmul(activation, pruning.apply_mask(gating_weights))
  
         if remove_diag:
