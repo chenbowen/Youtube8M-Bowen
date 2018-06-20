@@ -194,6 +194,12 @@ class NetVLAD():
           cluster_weights = tf.get_variable("cluster_weights",
                 [self.feature_size, self.cluster_size],
                 initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(self.feature_size)))
+          cluster_weights = tf.layers.dropout(
+              cluster_weights,
+              rate=0.5,
+              noise_shape=None,
+              seed=9612,
+              training=self.is_training)
          
           tf.summary.histogram("cluster_weights", cluster_weights)
           activation = tf.matmul(reshaped_input, pruning.apply_mask(cluster_weights, scope))
@@ -222,7 +228,12 @@ class NetVLAD():
             cluster_weights2 = tf.get_variable("cluster_weights2",
                 [1,self.feature_size, self.cluster_size],
                 initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(self.feature_size)))
-            
+            cluster_weights2 = tf.layers.dropout(
+              cluster_weights2,
+              rate=0.5,
+              noise_shape=None,
+              seed=9612,
+              training=self.is_training)
             a = tf.multiply(a_sum, pruning.apply_mask(cluster_weights2, scope))
         
         activation = tf.transpose(activation,perm=[0,2,1])
@@ -671,7 +682,12 @@ class NetVLADModelLF(models.BaseModel):
         hidden1_weights = tf.get_variable("hidden1_weights",
           [vlad_dim, hidden1_size],
           initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(cluster_size)))
-           
+        hidden1_weights = tf.layers.dropout(
+              hidden1_weights,
+              rate=0.5,
+              noise_shape=None,
+              seed=9612,
+              training=self.is_training)
         activation = tf.matmul(vlad, pruning.apply_mask(hidden1_weights, scope))
 
     if add_batch_norm and relu:
@@ -698,7 +714,12 @@ class NetVLADModelLF(models.BaseModel):
             gating_weights = tf.get_variable("gating_weights_2",
               [hidden1_size, hidden1_size],
               initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
-            
+            gating_weights = tf.layers.dropout(
+              gating_weights,
+              rate=0.5,
+              noise_shape=None,
+              seed=9612,
+              training=self.is_training)
             gates = tf.matmul(activation, pruning.apply_mask(gating_weights))
  
         if remove_diag:
