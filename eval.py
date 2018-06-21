@@ -196,90 +196,90 @@ def evaluation_loop(video_id_batch, prediction_batch, label_batch, loss,
   Returns:
     The global_step used in the latest model.
   """
-  with tf.device("/gpu:0"):
-    global_step_val = -1
-    with tf.Session() as sess:
-      latest_checkpoint = get_latest_checkpoint()
-      if latest_checkpoint:
-        logging.info("Loading checkpoint for eval: " + latest_checkpoint)
-        # Restores from checkpoint
-        saver.restore(sess, latest_checkpoint)
-        # Assuming model_checkpoint_path looks something like:
-        # /my-favorite-path/yt8m_train/model.ckpt-0, extract global_step from it.
-        global_step_val = os.path.basename(latest_checkpoint).split("-")[-1]
 
-        # Save model
-        saver.save(sess, os.path.join(FLAGS.train_dir, "inference_model"))
-      else:
-        logging.info("No checkpoint file found.")
-        return global_step_val
+  global_step_val = -1
+  with tf.Session() as sess:
+    latest_checkpoint = get_latest_checkpoint()
+    if latest_checkpoint:
+      logging.info("Loading checkpoint for eval: " + latest_checkpoint)
+      # Restores from checkpoint
+      saver.restore(sess, latest_checkpoint)
+      # Assuming model_checkpoint_path looks something like:
+      # /my-favorite-path/yt8m_train/model.ckpt-0, extract global_step from it.
+      global_step_val = os.path.basename(latest_checkpoint).split("-")[-1]
 
-      if global_step_val == last_global_step_val:
-        logging.info("skip this checkpoint global_step_val=%s "
-                     "(same as the previous one).", global_step_val)
-        return global_step_val
+      # Save model
+      saver.save(sess, os.path.join(FLAGS.train_dir, "inference_model"))
+    else:
+      logging.info("No checkpoint file found.")
+      return global_step_val
 
-      sess.run([tf.local_variables_initializer()])
+    if global_step_val == last_global_step_val:
+      logging.info("skip this checkpoint global_step_val=%s "
+                   "(same as the previous one).", global_step_val)
+      return global_step_val
 
-      # Start the queue runners.
-      fetches = [video_id_batch, prediction_batch, label_batch, loss, summary_op]
-      coord = tf.train.Coordinator()
-      try:
-        threads = []
-        for qr in tf.get_collection(tf.GraphKeys.QUEUE_RUNNERS):
-          threads.extend(qr.create_threads(
-              sess, coord=coord, daemon=True,
-              start=True))
-        logging.info("enter eval_once loop global_step_val = %s. ",
-                     global_step_val)
+    sess.run([tf.local_variables_initializer()])
 
-        evl_metrics.clear()
+    # Start the queue runners.
+    fetches = [video_id_batch, prediction_batch, label_batch, loss, summary_op]
+    coord = tf.train.Coordinator()
+    try:
+      threads = []
+      for qr in tf.get_collection(tf.GraphKeys.QUEUE_RUNNERS):
+        threads.extend(qr.create_threads(
+            sess, coord=coord, daemon=True,
+            start=True))
+      logging.info("enter eval_once loop global_step_val = %s. ",
+                   global_step_val)
 
-        examples_processed = 0
-        while not coord.should_stop():
-          batch_start_time = time.time()
-          _, predictions_val, labels_val, loss_val, summary_val = sess.run(
-              fetches)
-          seconds_per_batch = time.time() - batch_start_time
-          example_per_second = labels_val.shape[0] / seconds_per_batch
-          examples_processed += labels_val.shape[0]
+      evl_metrics.clear()
 
-          iteration_info_dict = evl_metrics.accumulate(predictions_val,
-                                                       labels_val, loss_val)
-          iteration_info_dict["examples_per_second"] = example_per_second
+      examples_processed = 0
+      while not coord.should_stop():
+        batch_start_time = time.time()
+        _, predictions_val, labels_val, loss_val, summary_val = sess.run(
+            fetches)
+        seconds_per_batch = time.time() - batch_start_time
+        example_per_second = labels_val.shape[0] / seconds_per_batch
+        examples_processed += labels_val.shape[0]
 
-          iterinfo = utils.AddGlobalStepSummary(
-              summary_writer,
-              global_step_val,
-              iteration_info_dict,
-              summary_scope="Eval")
-          logging.info("examples_processed: %d | %s", examples_processed,
-                       iterinfo)
+        iteration_info_dict = evl_metrics.accumulate(predictions_val,
+                                                     labels_val, loss_val)
+        iteration_info_dict["examples_per_second"] = example_per_second
 
-      except tf.errors.OutOfRangeError as e:
-        logging.info(
-            "Done with batched inference. Now calculating global performance "
-            "metrics.")
-        # calculate the metrics for the entire epoch
-        epoch_info_dict = evl_metrics.get()
-        epoch_info_dict["epoch_id"] = global_step_val
-
-        summary_writer.add_summary(summary_val, global_step_val)
-        epochinfo = utils.AddEpochSummary(
+        iterinfo = utils.AddGlobalStepSummary(
             summary_writer,
             global_step_val,
-            epoch_info_dict,
+            iteration_info_dict,
             summary_scope="Eval")
-        logging.info(epochinfo)
-        evl_metrics.clear()
-      except Exception as e:  # pylint: disable=broad-except
-        logging.info("Unexpected exception: " + str(e))
-        coord.request_stop(e)
+        logging.info("examples_processed: %d | %s", examples_processed,
+                     iterinfo)
 
-      coord.request_stop()
-      coord.join(threads, stop_grace_period_secs=10)
+    except tf.errors.OutOfRangeError as e:
+      logging.info(
+          "Done with batched inference. Now calculating global performance "
+          "metrics.")
+      # calculate the metrics for the entire epoch
+      epoch_info_dict = evl_metrics.get()
+      epoch_info_dict["epoch_id"] = global_step_val
 
-      return global_step_val
+      summary_writer.add_summary(summary_val, global_step_val)
+      epochinfo = utils.AddEpochSummary(
+          summary_writer,
+          global_step_val,
+          epoch_info_dict,
+          summary_scope="Eval")
+      logging.info(epochinfo)
+      evl_metrics.clear()
+    except Exception as e:  # pylint: disable=broad-except
+      logging.info("Unexpected exception: " + str(e))
+      coord.request_stop(e)
+
+    coord.request_stop()
+    coord.join(threads, stop_grace_period_secs=10)
+
+    return global_step_val
 
 
 def evaluate():
@@ -333,13 +333,14 @@ def evaluate():
     evl_metrics = eval_util.EvaluationMetrics(reader.num_classes, FLAGS.top_k)
 
     last_global_step_val = -1
-    while True:
-      last_global_step_val = evaluation_loop(video_id_batch, prediction_batch,
-                                             label_batch, loss, summary_op,
-                                             saver, summary_writer, evl_metrics,
-                                             last_global_step_val)
-      if FLAGS.run_once:
-        break
+    with tf.device("/gpu:0"):
+      while True:
+        last_global_step_val = evaluation_loop(video_id_batch, prediction_batch,
+                                               label_batch, loss, summary_op,
+                                               saver, summary_writer, evl_metrics,
+                                               last_global_step_val)
+        if FLAGS.run_once:
+          break
 
 
 def main(unused_argv):
