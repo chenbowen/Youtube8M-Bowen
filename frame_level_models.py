@@ -743,7 +743,8 @@ class NetVLADModelLF(models.BaseModel):
 
         gates = tf.sigmoid(gates)
 
-        activation = tf.multiply(activation,gates)
+        # Residual context gating
+        activation = tf.subtract(activation, tf.multiply(activation,gates))
 
     aggregated_model = getattr(video_level_models,
                                FLAGS.video_level_classifier_model)
