@@ -72,7 +72,7 @@ if __name__ == '__main__':
   flags.DEFINE_integer(
       "batch_size", 8192,
       "How many examples to process per batch.")
-  flags.DEFINE_integer("num_readers", 1,
+  flags.DEFINE_integer("num_readers", 12,
                        "How many threads to use for reading input files.")
 
 def format_lines(video_ids, predictions, top_k):
@@ -138,49 +138,51 @@ def inference(reader, train_dir, data_pattern, out_file_location, batch_size, to
                 arcname="model_flags.json")
       print('Tarred model onto ' + FLAGS.output_model_tgz)
     with tf.device("/gpu:0"):
-      saver = tf.train.import_meta_graph(meta_graph_location, clear_devices=True)
-    logging.info("restoring variables from " + checkpoint_file)
-    saver.restore(sess, checkpoint_file)
-    input_tensor = tf.get_collection("input_batch_raw")[0]
-    num_frames_tensor = tf.get_collection("num_frames")[0]
-    predictions_tensor = tf.get_collection("predictions")[0]
+      #saver = tf.train.import_meta_graph(meta_graph_location, clear_devices=True)
+      saver = tf.train.import_meta_graph(meta_graph_location)
+      logging.info("restoring variables from " + checkpoint_file)
+      saver.restore(sess, checkpoint_file)
+      input_tensor = tf.get_collection("input_batch_raw")[0]
+      num_frames_tensor = tf.get_collection("num_frames")[0]
+      predictions_tensor = tf.get_collection("predictions")[0]
 
-    # Workaround for num_epochs issue.
-    def set_up_init_ops(variables):
-      init_op_list = []
-      for variable in list(variables):
-        if "train_input" in variable.name:
-          init_op_list.append(tf.assign(variable, 1))
-          variables.remove(variable)
-      init_op_list.append(tf.variables_initializer(variables))
-      return init_op_list
-
-    sess.run(set_up_init_ops(tf.get_collection_ref(
-        tf.GraphKeys.LOCAL_VARIABLES)))
-
-    coord = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-    num_examples_processed = 0
-    start_time = time.time()
-    out_file.write("VideoId,LabelConfidencePairs\n")
-
-    try:
-      while not coord.should_stop():
-          video_id_batch_val, video_batch_val,num_frames_batch_val = sess.run([video_id_batch, video_batch, num_frames_batch])
-          predictions_val, = sess.run([predictions_tensor], feed_dict={input_tensor: video_batch_val, num_frames_tensor: num_frames_batch_val})
-          now = time.time()
-          num_examples_processed += len(video_batch_val)
-          num_classes = predictions_val.shape[1]
-          logging.info("num examples processed: " + str(num_examples_processed) + " elapsed seconds: " + "{0:.2f}".format(now-start_time))
-          for line in format_lines(video_id_batch_val, predictions_val, top_k):
-            out_file.write(line)
-          out_file.flush()
+      # Workaround for num_epochs issue.
+      def set_up_init_ops(variables):
+        init_op_list = []
+        for variable in list(variables):
+          if "train_input" in variable.name:
+            init_op_list.append(tf.assign(variable, 1))
+            variables.remove(variable)
+        init_op_list.append(tf.variables_initializer(variables))
+        return init_op_list
 
 
-    except tf.errors.OutOfRangeError:
-        logging.info('Done with inference. The output file was written to ' + out_file_location)
-    finally:
-        coord.request_stop()
+      sess.run(set_up_init_ops(tf.get_collection_ref(
+          tf.GraphKeys.LOCAL_VARIABLES)))
+
+      coord = tf.train.Coordinator()
+      threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+      num_examples_processed = 0
+      start_time = time.time()
+      out_file.write("VideoId,LabelConfidencePairs\n")
+
+      try:
+        while not coord.should_stop():
+            video_id_batch_val, video_batch_val,num_frames_batch_val = sess.run([video_id_batch, video_batch, num_frames_batch])
+            predictions_val, = sess.run([predictions_tensor], feed_dict={input_tensor: video_batch_val, num_frames_tensor: num_frames_batch_val})
+            now = time.time()
+            num_examples_processed += len(video_batch_val)
+            num_classes = predictions_val.shape[1]
+            logging.info("num examples processed: " + str(num_examples_processed) + " elapsed seconds: " + "{0:.2f}".format(now-start_time))
+            for line in format_lines(video_id_batch_val, predictions_val, top_k):
+              out_file.write(line)
+            out_file.flush()
+
+
+      except tf.errors.OutOfRangeError:
+          logging.info('Done with inference. The output file was written to ' + out_file_location)
+      finally:
+          coord.request_stop()
 
     coord.join(threads)
     sess.close()
