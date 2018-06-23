@@ -701,7 +701,7 @@ class NetVLADModelLF(models.BaseModel):
             diagonals = tf.matrix_diag_part(gating_weights)
             gates = gates - tf.multiply(diagonals,activation)
 
-       
+        gates = tf.matmul(activation, gating_weights)
         if add_batch_norm:
           gates = slim.batch_norm(
               gates,
