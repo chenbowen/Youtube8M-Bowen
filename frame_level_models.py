@@ -647,7 +647,7 @@ class NetVLADModelLF(models.BaseModel):
       video_NetVLAD = NetVLAD(1024,max_frames,cluster_size, add_batch_norm, is_training)
       audio_NetVLAD = NetVLAD(128,max_frames,cluster_size/2, add_batch_norm, is_training)
 
-  
+    
     if add_batch_norm:# and not lightvlad:
       reshaped_input = slim.batch_norm(
           reshaped_input,
@@ -666,10 +666,10 @@ class NetVLADModelLF(models.BaseModel):
 
     vlad_dim = vlad.get_shape().as_list()[1]
     with tf.variable_scope('hidden1_weights') as scope:
-        hidden1_weights = tf.get_variable("hidden1_weights",
-          [vlad_dim, hidden1_size],
-          initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(cluster_size)))
-
+      hidden1_weights = tf.get_variable("hidden1_weights",
+        [vlad_dim, hidden1_size],
+        initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(cluster_size)))
+    activation = tf.matmul(vlad, hidden1_weights)
     #if add_batch_norm and relu:
     if add_batch_norm:
       activation = slim.batch_norm(
