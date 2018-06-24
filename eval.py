@@ -333,14 +333,13 @@ def evaluate():
     evl_metrics = eval_util.EvaluationMetrics(reader.num_classes, FLAGS.top_k)
 
     last_global_step_val = -1
-    with tf.device("/gpu:0"):
-      while True:
-        last_global_step_val = evaluation_loop(video_id_batch, prediction_batch,
-                                               label_batch, loss, summary_op,
-                                               saver, summary_writer, evl_metrics,
-                                               last_global_step_val)
-        if FLAGS.run_once:
-          break
+    while True:
+      last_global_step_val = evaluation_loop(video_id_batch, prediction_batch,
+                                             label_batch, loss, summary_op,
+                                             saver, summary_writer, evl_metrics,
+                                             last_global_step_val)
+      if FLAGS.run_once:
+        break
 
 
 def main(unused_argv):
