@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Binary for evaluating Tensorflow models on the YouTube-8M dataset."""
+
 import glob
 import json
 import os
