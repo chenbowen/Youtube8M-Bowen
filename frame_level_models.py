@@ -670,8 +670,7 @@ class NetVLADModelLF(models.BaseModel):
         [vlad_dim, hidden1_size],
         initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(cluster_size)))
     activation = tf.matmul(vlad, hidden1_weights)
-    #if add_batch_norm and relu:
-    if add_batch_norm:
+    if add_batch_norm and relu:
       activation = slim.batch_norm(
           activation,
           center=True,
