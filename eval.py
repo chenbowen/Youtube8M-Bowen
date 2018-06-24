@@ -24,12 +24,12 @@ import frame_level_models
 import video_level_models
 import readers
 import tensorflow as tf
-from tensorflow.python.lib.io import file_io
 from tensorflow import app
 from tensorflow import flags
 from tensorflow import gfile
 from tensorflow import logging
 import utils
+import random
 
 FLAGS = flags.FLAGS
 
@@ -65,21 +65,29 @@ def get_input_evaluation_tensors(reader,
                                  batch_size=1024,
                                  num_readers=1):
   """Creates the section of the graph which reads the evaluation data.
+
   Args:
     reader: A class which parses the training data.
     data_pattern: A 'glob' style path to the data files.
     batch_size: How many examples to process at a time.
     num_readers: How many I/O threads to use.
+
   Returns:
     A tuple containing the features tensor, labels tensor, and optionally a
     tensor containing the number of frames per video. The exact dimensions
     depend on the reader being used.
+
   Raises:
     IOError: If no files matching the given pattern were found.
   """
   logging.info("Using batch size of " + str(batch_size) + " for evaluation.")
   with tf.name_scope("eval_input"):
-    files = gfile.Glob(data_pattern)
+    random.seed(9612)
+    validate_file_list = gfile.Glob(data_pattern)
+    random.shuffle(validate_file_list)
+    NUM_VALIDATION_FILES = 60
+    files = validate_file_list[-NUM_VALIDATION_FILES:]
+
     if not files:
       raise IOError("Unable to find the evaluation files.")
     logging.info("number of evaluation files: " + str(len(files)))
@@ -103,6 +111,7 @@ def build_graph(reader,
                 batch_size=1024,
                 num_readers=1):
   """Creates the Tensorflow graph for evaluation.
+
   Args:
     reader: The data file reader. It should inherit from BaseReader.
     model: The core model (e.g. logistic or neural net). It should inherit
@@ -152,7 +161,7 @@ def build_graph(reader,
 
 
 def get_latest_checkpoint():
-  index_files = file_io.get_matching_files(os.path.join(FLAGS.train_dir, 'model.ckpt-*.index'))
+  index_files = glob.glob(os.path.join(FLAGS.train_dir, 'model.ckpt-*.index'))
 
   # No files
   if not index_files:
@@ -172,6 +181,7 @@ def evaluation_loop(video_id_batch, prediction_batch, label_batch, loss,
                     summary_op, saver, summary_writer, evl_metrics,
                     last_global_step_val):
   """Run the evaluation loop once.
+
   Args:
     video_id_batch: a tensor of video ids mini-batch.
     prediction_batch: a tensor of predictions mini-batch.
@@ -182,6 +192,7 @@ def evaluation_loop(video_id_batch, prediction_batch, label_batch, loss,
     summary_writer: a tensorflow summary_writer
     evl_metrics: an EvaluationMetrics object.
     last_global_step_val: the global step used in the previous evaluation.
+
   Returns:
     The global_step used in the latest model.
   """
@@ -276,10 +287,10 @@ def evaluate():
 
   # Write json of flags
   model_flags_path = os.path.join(FLAGS.train_dir, "model_flags.json")
-  if not file_io.file_exists(model_flags_path):
+  if not os.path.exists(model_flags_path):
     raise IOError(("Cannot find file %s. Did you run train.py on the same "
                    "--train_dir?") % model_flags_path)
-  flags_dict = json.loads(file_io.FileIO(model_flags_path, mode="r").read())
+  flags_dict = json.loads(open(model_flags_path).read())
 
   with tf.Graph().as_default():
     # convert feature_names and feature_sizes to lists of values
@@ -322,13 +333,14 @@ def evaluate():
     evl_metrics = eval_util.EvaluationMetrics(reader.num_classes, FLAGS.top_k)
 
     last_global_step_val = -1
-    while True:
-      last_global_step_val = evaluation_loop(video_id_batch, prediction_batch,
-                                             label_batch, loss, summary_op,
-                                             saver, summary_writer, evl_metrics,
-                                             last_global_step_val)
-      if FLAGS.run_once:
-        break
+    with tf.device("/gpu:0"):
+      while True:
+        last_global_step_val = evaluation_loop(video_id_batch, prediction_batch,
+                                               label_batch, loss, summary_op,
+                                               saver, summary_writer, evl_metrics,
+                                               last_global_step_val)
+        if FLAGS.run_once:
+          break
 
 
 def main(unused_argv):
