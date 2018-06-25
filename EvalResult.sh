@@ -30,8 +30,7 @@ python eval.py --eval_data_pattern="gs://youtube8m-ml-us-east1/2/frame/validate/
 number 103500 | Avg_Hit@1: 0.895 | Avg_PERR: 0.808 | MAP: 0.506 | GAP: 0.867 | Avg_Loss: 3.620727
 number 115510 | Avg_Hit@1: 0.894 | Avg_PERR: 0.808 | MAP: 0.506 | GAP: 0.867 | Avg_Loss: 3.614347
 number 162309 | Avg_Hit@1: 0.897 | Avg_PERR: 0.814 | MAP: 0.518 | GAP: 0.871 | Avg_Loss: 3.542892
-number 172546 | Avg_Hit@1: 0.898 | Avg_PERR: 0.814 | MAP: 0.521 | GAP: 0.872 | Avg_Loss: 3.518483
-number 183520 | Avg_Hit@1: 0.897 | Avg_PERR: 0.812 | MAP: 0.518 | GAP: 0.872 | Avg_Loss: 3.549279
+number 172546 | Avg_Hit@1: 0.898 | Avg_PERR: 0.814 | MAP: 0.521 | GAP: 0.872 | Avg_Loss: 3.518483                         
 number 217145 | Avg_Hit@1: 0.897 | Avg_PERR: 0.814 | MAP: 0.519 | GAP: 0.871 | Avg_Loss: 3.584567
 number 228270 | Avg_Hit@1: 0.898 | Avg_PERR: 0.813 | MAP: 0.518 | GAP: 0.871 | Avg_Loss: 3.585022
 #################################################################################################
