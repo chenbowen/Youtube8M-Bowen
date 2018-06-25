@@ -668,7 +668,7 @@ class NetVLADModelLF(models.BaseModel):
     with tf.variable_scope('hidden1_weights') as scope:
       hidden1_weights = tf.get_variable("hidden1_weights",
         [vlad_dim, hidden1_size],
-        initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(cluster_size)))
+        initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(vlad_dim)))
     activation = tf.matmul(vlad, hidden1_weights)
     if add_batch_norm and relu:
       activation = slim.batch_norm(
@@ -677,7 +677,6 @@ class NetVLADModelLF(models.BaseModel):
           scale=True,
           is_training=is_training,
           scope="hidden1_bn")
-
     else:
       hidden1_biases = tf.get_variable("hidden1_biases",
         [hidden1_size],
@@ -691,15 +690,10 @@ class NetVLADModelLF(models.BaseModel):
 
     if gating:
         with tf.variable_scope('gating_weights') as scope:
-            gating_weights = tf.get_variable("gating_weights_2",
+            gating_weights = tf.get_variable("gating_weights",
               [hidden1_size, hidden1_size],
               initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
  
-        if remove_diag:
-            #removes diagonals coefficients
-            diagonals = tf.matrix_diag_part(gating_weights)
-            gates = gates - tf.multiply(diagonals,activation)
-
         gates = tf.matmul(activation, gating_weights)
         if add_batch_norm:
           gates = slim.batch_norm(
@@ -709,15 +703,55 @@ class NetVLADModelLF(models.BaseModel):
               is_training=is_training,
               scope="gating_bn")
         else:
+          # Todo: wrong biase size?
           gating_biases = tf.get_variable("gating_biases",
             [cluster_size],
-            initializer = tf.random_normal(stddev=1 / math.sqrt(feature_size)))
+            initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(feature_size)))
           gates += gating_biases
 
         gates = tf.sigmoid(gates)
+        activation = tf.multiply(activation,gates)
 
-        # Residual context gating
-        activation = tf.subtract(activation, tf.multiply(activation,gates))
+    with tf.variable_scope('hidden2_weights') as scope:
+      hidden2_weights = tf.get_variable("hidden2_weights",
+        [hidden1_size, hidden1_size],
+        initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
+    activation = tf.matmul(activation, hidden2_weights)
+    if add_batch_norm and relu:
+      activation = slim.batch_norm(
+          activation,
+          center=True,
+          scale=True,
+          is_training=is_training,
+          scope="hidden1_bn")
+    else:
+      hidden2_biases = tf.get_variable("hidden2_biases",
+        [hidden1_size],
+        initializer = tf.random_normal_initializer(stddev=0.01))
+      tf.summary.histogram("hidden2_biases", hidden2_biases)
+      activation += hidden2_biases
+   
+    if relu: 
+      activation = tf.nn.relu6(activation)
+   
+
+    if gating:
+        with tf.variable_scope('gating_weights2') as scope:
+            gating_weights2 = tf.get_variable("gating_weights2",
+              [hidden1_size, hidden1_size],
+              initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
+
+        gates = tf.matmul(activation, gating_weights2)
+        if add_batch_norm:
+          gates = slim.batch_norm(
+              gates,
+              center=True,
+              scale=True,
+              is_training=is_training,
+              scope="gating_bn")
+
+        gates = tf.sigmoid(gates)
+        activation = tf.multiply(activation, gates)
 
     aggregated_model = getattr(video_level_models,
                                FLAGS.video_level_classifier_model)
