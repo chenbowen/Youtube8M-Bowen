@@ -723,7 +723,7 @@ class NetVLADModelLF(models.BaseModel):
           center=True,
           scale=True,
           is_training=is_training,
-          scope="hidden1_bn")
+          scope="hidden2_bn")
     else:
       hidden2_biases = tf.get_variable("hidden2_biases",
         [hidden1_size],
@@ -748,7 +748,7 @@ class NetVLADModelLF(models.BaseModel):
               center=True,
               scale=True,
               is_training=is_training,
-              scope="gating_bn")
+              scope="gating_bn2")
 
         gates = tf.sigmoid(gates)
         activation = tf.multiply(activation, gates)
