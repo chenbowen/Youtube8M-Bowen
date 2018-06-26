@@ -670,95 +670,58 @@ class NetVLADModelLF(models.BaseModel):
         [vlad_dim, hidden1_size],
         initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(vlad_dim)))
     activation = tf.matmul(vlad, hidden1_weights)
-    if add_batch_norm and relu:
-      activation = slim.batch_norm(
-          activation,
-          center=True,
-          scale=True,
-          is_training=is_training,
-          scope="hidden1_bn")
-    else:
-      hidden1_biases = tf.get_variable("hidden1_biases",
-        [hidden1_size],
-        initializer = tf.random_normal_initializer(stddev=0.01))
-      tf.summary.histogram("hidden1_biases", hidden1_biases)
-      activation += hidden1_biases
-   
-    if relu: 
-      activation = tf.nn.relu6(activation)
-   
+    activation2 = slim.batch_norm(
+        activation,
+        center=True,
+        scale=True,
+        is_training=is_training,
+        scope="hidden1_bn")      
 
-    if gating:
-        with tf.variable_scope('gating_weights') as scope:
-            gating_weights = tf.get_variable("gating_weights",
-              [hidden1_size, hidden1_size],
-              initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
- 
-        gates = tf.matmul(activation, gating_weights)
-        if add_batch_norm:
-          gates = slim.batch_norm(
-              gates,
-              center=True,
-              scale=True,
-              is_training=is_training,
-              scope="gating_bn")
-        else:
-          # Todo: wrong biase size?
-          gating_biases = tf.get_variable("gating_biases",
-            [cluster_size],
-            initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(feature_size)))
-          gates += gating_biases
-
-        gates = tf.sigmoid(gates)
-        activation = tf.multiply(activation,gates)
+    activation2 = tf.nn.relu6(activation2)
+   
 
     with tf.variable_scope('hidden2_weights') as scope:
       hidden2_weights = tf.get_variable("hidden2_weights",
         [hidden1_size, hidden1_size],
         initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
-    activation = tf.matmul(activation, hidden2_weights)
-    if add_batch_norm and relu:
-      activation = slim.batch_norm(
-          activation,
-          center=True,
-          scale=True,
-          is_training=is_training,
-          scope="hidden2_bn")
-    else:
-      hidden2_biases = tf.get_variable("hidden2_biases",
+    activation2 = tf.matmul(activation2, hidden2_weights)
+    hidden2_biases = tf.get_variable("hidden2_biases",
         [hidden1_size],
         initializer = tf.random_normal_initializer(stddev=0.01))
-      tf.summary.histogram("hidden2_biases", hidden2_biases)
-      activation += hidden2_biases
-   
-    if relu: 
-      activation = tf.nn.relu6(activation)
-   
-
+    tf.summary.histogram("hidden2_biases", hidden2_biases)
+    activation2 += hidden2_biases
+    activation2 += activation
     if gating:
-        with tf.variable_scope('gating_weights2') as scope:
-            gating_weights2 = tf.get_variable("gating_weights2",
-              [hidden1_size, hidden1_size],
-              initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
+      with tf.variable_scope('gating_weights') as scope:
+          gating_weights = tf.get_variable("gating_weights",
+            [hidden1_size, hidden1_size],
+            initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
 
-        gates = tf.matmul(activation, gating_weights2)
-        if add_batch_norm:
-          gates = slim.batch_norm(
-              gates,
-              center=True,
-              scale=True,
-              is_training=is_training,
-              scope="gating_bn2")
+      gates = tf.matmul(activation2, gating_weights)
+      if add_batch_norm:
+        gates = slim.batch_norm(
+            gates,
+            center=True,
+            scale=True,
+            is_training=is_training,
+            scope="gating_bn")
+      else:
+        # Todo: wrong biase size?
+        gating_biases = tf.get_variable("gating_biases",
+          [cluster_size],
+          initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(feature_size)))
+        gates += gating_biases
 
-        gates = tf.sigmoid(gates)
-        activation = tf.multiply(activation, gates)
+      gates = tf.sigmoid(gates)
+      activation2 = tf.multiply(activation2, gates)
+
 
     aggregated_model = getattr(video_level_models,
                                FLAGS.video_level_classifier_model)
 
 
     return aggregated_model().create_model(
-        model_input=activation,
+        model_input=activation2,
         vocab_size=vocab_size,
         is_training=is_training,
         **unused_params)

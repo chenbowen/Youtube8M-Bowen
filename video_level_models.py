@@ -149,7 +149,7 @@ class MoeModel(models.BaseModel):
 
         gates = tf.sigmoid(gates)
 
-        probabilities = tf.subtract(probabilities, tf.multiply(probabilities, gates))
+        probabilities = tf.multiply(probabilities, gates)
 
 
     return {"predictions": probabilities}
