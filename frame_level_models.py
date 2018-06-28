@@ -665,39 +665,66 @@ class NetVLADModelLF(models.BaseModel):
     vlad = tf.concat([vlad_video, vlad_audio],1)
 
     vlad_dim = vlad.get_shape().as_list()[1]
+
+    #
+    # 1st hidden layer
+    #
     with tf.variable_scope('hidden1_weights') as scope:
       hidden1_weights = tf.get_variable("hidden1_weights",
         [vlad_dim, hidden1_size],
         initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(vlad_dim)))
     activation = tf.matmul(vlad, hidden1_weights)
+
     activation2 = slim.batch_norm(
         activation,
         center=True,
         scale=True,
         is_training=is_training,
         scope="hidden1_bn")      
-
     activation2 = tf.nn.relu6(activation2)
-   
 
+    #
+    # 2nd hidden layer
+    #
+    hidden2_size = 2 * hidden1_size
     with tf.variable_scope('hidden2_weights') as scope:
       hidden2_weights = tf.get_variable("hidden2_weights",
-        [hidden1_size, hidden1_size],
-        initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
+        [hidden2_size, hidden2_size],
+        initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(hidden2_size)))
     activation2 = tf.matmul(activation2, hidden2_weights)
-    hidden2_biases = tf.get_variable("hidden2_biases",
-        [hidden1_size],
-        initializer = tf.random_normal_initializer(stddev=0.01))
-    tf.summary.histogram("hidden2_biases", hidden2_biases)
-    activation2 += hidden2_biases
     activation2 += activation
+
+    activation3 = slim.batch_norm(
+        activation2,
+        center=True,
+        scale=True,
+        is_training=is_training,
+        scope="hidden2_bn")      
+    activation3 = tf.nn.relu6(activation3)
+    
+    #
+    # 3rd hidden layer
+    #
+    hidden3_size = 2 * hidden2_size
+    with tf.variable_scope('hidden3_weights') as scope:
+      hidden3_weights = tf.get_variable("hidden3_weights",
+        [hidden3_size, hidden3_size],
+        initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(hidden3_size)))
+    activation3 = tf.matmul(activation3, hidden3_weights)
+    hidden3_biases = tf.get_variable("hidden3_biases", 
+      [hidden3_size], 
+      initializer = tf.random_normal_initializer(stddev=0.01))
+    tf.summary.histogram("hidden3_biases", hidden3_biases)
+    activation3 += hidden3_biases
+    activation3 += activation2
+    
     if gating:
       with tf.variable_scope('gating_weights') as scope:
           gating_weights = tf.get_variable("gating_weights",
-            [hidden1_size, hidden1_size],
-            initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
+            [hidden3_size, hidden3_size],
+            initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(hidden3_size)))
 
-      gates = tf.matmul(activation2, gating_weights)
+      gates = tf.matmul(activation3, gating_weights)
       if add_batch_norm:
         gates = slim.batch_norm(
             gates,
@@ -706,14 +733,13 @@ class NetVLADModelLF(models.BaseModel):
             is_training=is_training,
             scope="gating_bn")
       else:
-        # Todo: wrong biase size?
         gating_biases = tf.get_variable("gating_biases",
-          [cluster_size],
-          initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(feature_size)))
+          [hidden3_size],
+          initializer = tf.random_normal_initializer(stddev=0.01))
         gates += gating_biases
 
       gates = tf.sigmoid(gates)
-      activation2 = tf.multiply(activation2, gates)
+      activation3 = tf.multiply(activation3, gates)
 
 
     aggregated_model = getattr(video_level_models,
@@ -721,7 +747,7 @@ class NetVLADModelLF(models.BaseModel):
 
 
     return aggregated_model().create_model(
-        model_input=activation2,
+        model_input=activation3,
         vocab_size=vocab_size,
         is_training=is_training,
         **unused_params)
