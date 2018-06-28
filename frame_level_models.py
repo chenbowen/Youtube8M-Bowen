@@ -689,8 +689,8 @@ class NetVLADModelLF(models.BaseModel):
     hidden2_size = 2 * hidden1_size
     with tf.variable_scope('hidden2_weights') as scope:
       hidden2_weights = tf.get_variable("hidden2_weights",
-        [hidden2_size, hidden2_size],
-        initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(hidden2_size)))
+        [hidden1_size, hidden2_size],
+        initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
     activation2 = tf.matmul(activation2, hidden2_weights)
     activation2 += activation
 
@@ -708,8 +708,8 @@ class NetVLADModelLF(models.BaseModel):
     hidden3_size = 2 * hidden2_size
     with tf.variable_scope('hidden3_weights') as scope:
       hidden3_weights = tf.get_variable("hidden3_weights",
-        [hidden3_size, hidden3_size],
-        initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(hidden3_size)))
+        [hidden2_size, hidden3_size],
+        initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(hidden2_size)))
     activation3 = tf.matmul(activation3, hidden3_weights)
     hidden3_biases = tf.get_variable("hidden3_biases", 
       [hidden3_size], 
