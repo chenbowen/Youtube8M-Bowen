@@ -692,7 +692,7 @@ class NetVLADModelLF(models.BaseModel):
         [hidden1_size, hidden2_size],
         initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
     activation2 = tf.matmul(activation2, hidden2_weights)
-    activation2 += activation
+    #activation2 += activation
 
     activation3 = slim.batch_norm(
         activation2,
@@ -716,7 +716,7 @@ class NetVLADModelLF(models.BaseModel):
       initializer = tf.random_normal_initializer(stddev=0.01))
     tf.summary.histogram("hidden3_biases", hidden3_biases)
     activation3 += hidden3_biases
-    activation3 += activation2
+    #activation3 += activation2
     
     if gating:
       with tf.variable_scope('gating_weights') as scope:
