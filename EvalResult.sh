@@ -78,3 +78,4 @@ python train.py --train_data_pattern="gs://youtube8m-ml-us-east1/2/frame/train/t
 python eval.py --eval_data_pattern="gs://youtube8m-ml-us-east1/2/frame/validate/validate*.tfrecord" --train_dir ~/yt8m/v2/models/frame/NetVLAD512_1024_2048_add --frame_features --feature_names='rgb,audio' --feature_sizes='1024,128' --batch_size=128 --base_learning_rate=0.0002 --netvlad_cluster_size=256 --netvlad_hidden_size=512 --moe_l2=1e-6 --iterations=300 --learning_rate_decay=0.8 --netvlad_relu=False --gating=True --moe_prob_gating=True --run_once=True
 
 number 113056 | Avg_Hit@1: 0.891 | Avg_PERR: 0.800 | MAP: 0.486 | GAP: 0.859 | Avg_Loss: 3.732474
+number 169599 | Avg_Hit@1: 0.894 | Avg_PERR: 0.806 | MAP: 0.500 | GAP: 0.866 | Avg_Loss: 3.622756
