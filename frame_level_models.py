@@ -705,7 +705,7 @@ class NetVLADModelLF(models.BaseModel):
     activation = tf.matmul(vlad, hidden1_weights)
 
     hidden1_biases = tf.get_variable("hidden1_biases", 
-      [hidden3_size], 
+      [hidden1_size], 
       initializer = tf.random_normal_initializer(stddev=0.01))
     tf.summary.histogram("hidden1_biases", hidden1_biases)
     activation += hidden1_biases
