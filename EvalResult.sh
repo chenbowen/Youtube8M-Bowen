@@ -74,7 +74,6 @@ number 235726 | Avg_Hit@1: 0.894 | Avg_PERR: 0.807 | MAP: 0.505 | GAP: 0.866 | A
 ############## NetVLAD [BN-RELU*(512FC,1024FC,2048FC), cg, MOE, cg, 1e-6] #######################
 ###################################### instance-3 ###############################################
 #################################################################################################
-<<<<<<< HEAD
 number 113056 | Avg_Hit@1: 0.891 | Avg_PERR: 0.800 | MAP: 0.486 | GAP: 0.859 | Avg_Loss: 3.732474
 number 155477 | Avg_Hit@1: 0.892 | Avg_PERR: 0.804 | MAP: 0.499 | GAP: 0.864 | Avg_Loss: 3.664339
 number 169599 | Avg_Hit@1: 0.894 | Avg_PERR: 0.806 | MAP: 0.500 | GAP: 0.866 | Avg_Loss: 3.622756
@@ -84,15 +83,8 @@ number 197442 | Avg_Hit@1: 0.893 | Avg_PERR: 0.804 | MAP: 0.500 | GAP: 0.863 | A
 number 209600 | Avg_Hit@1: 0.893 | Avg_PERR: 0.806 | MAP: 0.502 | GAP: 0.865 | Avg_Loss: 3.687454
 number 215188 | Avg_Hit@1: 0.894 | Avg_PERR: 0.805 | MAP: 0.499 | GAP: 0.864 | Avg_Loss: 3.721508
 #################################################################################################
-############## NetVLAD [BN-RELU*(512FC,1024FC,2048FC), cg, MOE, cg, 1e-6] #######################
+############## NetVLAD [+1024 before vlad, 1024FC, cg, MOE, cg, 1e-6] ###########################
 ###################################### instance-3 ###############################################
 #################################################################################################
-python train.py --train_data_pattern="gs://youtube8m-ml-us-east1/2/frame/train/train*.tfrecord,gs://youtube8m-ml-us-east1/2/frame/validate/validate*.tfrecord" --model=NetVLADModelLF --train_dir ~/yt8m/v2/models/frame/NetVLAD512_1024_2048_add --frame_features --feature_names='rgb,audio' --feature_sizes='1024,128' --batch_size=80 --base_learning_rate=0.0002 --netvlad_cluster_size=256 --netvlad_hidden_size=1024 --moe_l2=1e-6 --iterations=300 --learning_rate_decay=0.8 --netvlad_relu=False --gating=True --moe_prob_gating=True --max_steps=300000 --export_model_steps=5000
-python eval.py --eval_data_pattern="gs://youtube8m-ml-us-east1/2/frame/validate/validate*.tfrecord" --train_dir ~/yt8m/v2/models/frame/NetVLAD512_1024_2048_add --frame_features --feature_names='rgb,audio' --feature_sizes='1024,128' --batch_size=128 --base_learning_rate=0.0002 --netvlad_cluster_size=256 --netvlad_hidden_size=1024 --moe_l2=1e-6 --iterations=300 --learning_rate_decay=0.8 --netvlad_relu=False --gating=True --moe_prob_gating=True --run_once=True
-=======
-python train.py --train_data_pattern="gs://youtube8m-ml-us-east1/2/frame/train/train*.tfrecord,gs://youtube8m-ml-us-east1/2/frame/validate/validate*.tfrecord" --model=NetVLADModelLF --train_dir ~/yt8m/v2/models/frame/NetVLAD512_1024_2048_add --frame_features --feature_names='rgb,audio' --feature_sizes='1024,128' --batch_size=80 --base_learning_rate=0.0002 --netvlad_cluster_size=256 --netvlad_hidden_size=512 --moe_l2=1e-6 --iterations=300 --learning_rate_decay=0.8 --netvlad_relu=False --gating=True --moe_prob_gating=True --max_steps=300000 --export_model_steps=5000
-python eval.py --eval_data_pattern="gs://youtube8m-ml-us-east1/2/frame/validate/validate*.tfrecord" --train_dir ~/yt8m/v2/models/frame/NetVLAD512_1024_2048_add --frame_features --feature_names='rgb,audio' --feature_sizes='1024,128' --batch_size=128 --base_learning_rate=0.0002 --netvlad_cluster_size=256 --netvlad_hidden_size=512 --moe_l2=1e-6 --iterations=300 --learning_rate_decay=0.8 --netvlad_relu=False --gating=True --moe_prob_gating=True --run_once=True
-
-number 113056 | Avg_Hit@1: 0.891 | Avg_PERR: 0.800 | MAP: 0.486 | GAP: 0.859 | Avg_Loss: 3.732474
-number 169599 | Avg_Hit@1: 0.894 | Avg_PERR: 0.806 | MAP: 0.500 | GAP: 0.866 | Avg_Loss: 3.622756
->>>>>>> a99018b8b2594796cc1c776e653a7585be7e8921
+python train.py --train_data_pattern="gs://youtube8m-ml-us-east1/2/frame/train/train*.tfrecord,gs://youtube8m-ml-us-east1/2/frame/validate/validate*.tfrecord" --model=NetVLADModelLF --train_dir ~/yt8m/v2/models/frame/NetVLADtrans1024 --frame_features --feature_names='rgb,audio' --feature_sizes='1024,128' --batch_size=80 --base_learning_rate=0.0002 --netvlad_cluster_size=256 --netvlad_hidden_size=1024 --moe_l2=1e-6 --iterations=300 --learning_rate_decay=0.8 --netvlad_relu=False --gating=True --moe_prob_gating=True --max_steps=300000 --export_model_steps=5000
+python eval.py --eval_data_pattern="gs://youtube8m-ml-us-east1/2/frame/validate/validate*.tfrecord" --train_dir ~/yt8m/v2/models/frame/NetVLADtrans1024 --frame_features --feature_names='rgb,audio' --feature_sizes='1024,128' --batch_size=128 --base_learning_rate=0.0002 --netvlad_cluster_size=256 --netvlad_hidden_size=1024 --moe_l2=1e-6 --iterations=300 --learning_rate_decay=0.8 --netvlad_relu=False --gating=True --moe_prob_gating=True --run_once=True

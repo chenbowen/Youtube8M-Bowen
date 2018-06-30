@@ -681,10 +681,8 @@ class NetVLADModelLF(models.BaseModel):
           is_training=is_training,
           scope="hidden0_output_audio_bn")
 
-    reshaped_input[:, 0:1024] += hidden0_output_video
-    reshaped_input[:, 1024:]  += hidden0_output_audio
-
-
+    hidden0_output = tf.concat([hidden0_output_video, hidden0_output_audio], 1)
+    reshaped_input += hidden0_output
 
 
     with tf.variable_scope("video_VLAD"):
