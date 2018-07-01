@@ -88,3 +88,10 @@ number 215188 | Avg_Hit@1: 0.894 | Avg_PERR: 0.805 | MAP: 0.499 | GAP: 0.864 | A
 #################################################################################################
 python train.py --train_data_pattern="gs://youtube8m-ml-us-east1/2/frame/train/train*.tfrecord,gs://youtube8m-ml-us-east1/2/frame/validate/validate*.tfrecord" --model=NetVLADModelLF --train_dir ~/yt8m/v2/models/frame/NetVLADtrans1024 --frame_features --feature_names='rgb,audio' --feature_sizes='1024,128' --batch_size=80 --base_learning_rate=0.0002 --netvlad_cluster_size=256 --netvlad_hidden_size=1024 --moe_l2=1e-6 --iterations=300 --learning_rate_decay=0.8 --netvlad_relu=False --gating=True --moe_prob_gating=True --max_steps=300000 --export_model_steps=5000
 python eval.py --eval_data_pattern="gs://youtube8m-ml-us-east1/2/frame/validate/validate*.tfrecord" --train_dir ~/yt8m/v2/models/frame/NetVLADtrans1024 --frame_features --feature_names='rgb,audio' --feature_sizes='1024,128' --batch_size=128 --base_learning_rate=0.0002 --netvlad_cluster_size=256 --netvlad_hidden_size=1024 --moe_l2=1e-6 --iterations=300 --learning_rate_decay=0.8 --netvlad_relu=False --gating=True --moe_prob_gating=True --run_once=True
+number 190974 | Avg_Hit@1: 0.895 | Avg_PERR: 0.810 | MAP: 0.510 | GAP: 0.870 | Avg_Loss: 3.582142
+number 205980 | Avg_Hit@1: 0.897 | Avg_PERR: 0.812 | MAP: 0.513 | GAP: 0.871 | Avg_Loss: 3.572899
+number 213424 | Avg_Hit@1: 0.895 | Avg_PERR: 0.810 | MAP: 0.514 | GAP: 0.870 | Avg_Loss: 3.584459
+number 218450 | Avg_Hit@1: 0.895 | Avg_PERR: 0.811 | MAP: 0.515 | GAP: 0.870 | Avg_Loss: 3.588556
+number 228419 | Avg_Hit@1: 0.896 | Avg_PERR: 0.811 | MAP: 0.514 | GAP: 0.870 | Avg_Loss: 3.593260
+number 233420 | Avg_Hit@1: 0.895 | Avg_PERR: 0.812 | MAP: 0.514 | GAP: 0.870 | Avg_Loss: 3.588823
+
