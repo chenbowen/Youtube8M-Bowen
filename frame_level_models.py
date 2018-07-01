@@ -722,6 +722,7 @@ class NetVLADModelLF(models.BaseModel):
         initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
     activation2 = tf.matmul(activation2, hidden2_weights)
     activation2 = tf.concat([activation, activation2], 1)
+    hidden2_size *= 2
     #activation2 += activation
     
     if gating:
