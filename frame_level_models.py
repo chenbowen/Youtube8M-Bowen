@@ -638,8 +638,12 @@ class NetVLADModelLF(models.BaseModel):
     reshaped_input = tf.reshape(model_input, [-1, feature_size])
 
 
-    new_vfeature_size = 1024 * 2
-    new_afeature_size = 128 * 2
+    #new_vfeature_size = 1024 * 2
+    #new_afeature_size = 128 * 2
+
+    new_vfeature_size = 1024
+    new_afeature_size = 128
+
     if lightvlad:
       video_NetVLAD = LightVLAD(new_vfeature_size, max_frames,cluster_size, add_batch_norm, is_training)
       audio_NetVLAD = LightVLAD(new_afeature_size, max_frames,cluster_size/2, add_batch_norm, is_training)
@@ -650,7 +654,7 @@ class NetVLADModelLF(models.BaseModel):
       video_NetVLAD = NetVLAD(new_vfeature_size, max_frames,cluster_size, add_batch_norm, is_training)
       audio_NetVLAD = NetVLAD(new_afeature_size, max_frames,cluster_size/2, add_batch_norm, is_training)
 
-    
+    '''
     #
     # 0th hidden layer
     #
@@ -686,11 +690,14 @@ class NetVLADModelLF(models.BaseModel):
     reshaped_input_vidio = tf.concat([hidden0_output_video, reshaped_input[:, 0:1024]], 1)
     reshaped_input_audio = tf.concat([hidden0_output_audio, reshaped_input[:, 1024:]], 1)
     
+    '''
+    
+    
     with tf.variable_scope("video_VLAD"):
-        vlad_video = video_NetVLAD.forward(reshaped_input_vidio) 
+        vlad_video = video_NetVLAD.forward(reshaped_input[:, 0:1024]) 
 
     with tf.variable_scope("audio_VLAD"):
-        vlad_audio = audio_NetVLAD.forward(reshaped_input_audio)
+        vlad_audio = audio_NetVLAD.forward(reshaped_input[:, 1024:])
 
     vlad = tf.concat([vlad_video, vlad_audio],1)
 
