@@ -691,8 +691,8 @@ class NetVLADModelLF(models.BaseModel):
     reshaped_input_audio = tf.concat([hidden0_output_audio, reshaped_input[:, 1024:]], 1)
     
     '''
-    
-    
+
+
     with tf.variable_scope("video_VLAD"):
         vlad_video = video_NetVLAD.forward(reshaped_input[:, 0:1024]) 
 
@@ -711,14 +711,41 @@ class NetVLADModelLF(models.BaseModel):
         [vlad_dim, hidden1_size],
         initializer   = tf.random_normal_initializer(stddev=1/math.sqrt(vlad_dim)))
     activation = tf.matmul(vlad, hidden1_weights)
+
+    activation2 = slim.batch_norm(
+        activation,
+        center=True,
+        scale=True,
+        is_training=is_training,
+        scope="hidden1_bn")      
+    activation2 = tf.nn.relu6(activation2)
+
+    #
+    # 2nd hidden layer
+    #
+    hidden2_size = 2 * hidden1_size
+    with tf.variable_scope('hidden2_weights') as scope:
+      hidden2_weights = tf.get_variable("hidden2_weights",
+        [hidden1_size, hidden2_size],
+        initializer=tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
+    activation2 = tf.matmul(activation2, hidden2_weights)
+    #activation2 += activation
+
+    hidden2_biases = tf.get_variable("hidden2_biases", 
+      [hidden2_size], 
+      initializer = tf.random_normal_initializer(stddev=0.01))
+    tf.summary.histogram("hidden2_biases", hidden2_biases)
+    activation2 += hidden2_biases
     
+
+
     if gating:
       with tf.variable_scope('gating_weights') as scope:
           gating_weights = tf.get_variable("gating_weights",
-            [hidden1_size, hidden1_size],
-            initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(hidden1_size)))
+            [hidden2_size, hidden2_size],
+            initializer = tf.random_normal_initializer(stddev=1 / math.sqrt(hidden2_size)))
 
-      gates = tf.matmul(activation, gating_weights)
+      gates = tf.matmul(activation2, gating_weights)
       if add_batch_norm:
         gates = slim.batch_norm(
             gates,
@@ -728,12 +755,12 @@ class NetVLADModelLF(models.BaseModel):
             scope="gating_bn")
       else:
         gating_biases = tf.get_variable("gating_biases",
-          [hidden1_size],
+          [hidden2_size],
           initializer = tf.random_normal_initializer(stddev=0.01))
         gates += gating_biases
 
       gates = tf.sigmoid(gates)
-      activation = tf.multiply(activation, gates)
+      activation2 = tf.multiply(activation2, gates)
 
 
     aggregated_model = getattr(video_level_models,
@@ -741,7 +768,7 @@ class NetVLADModelLF(models.BaseModel):
 
 
     return aggregated_model().create_model(
-        model_input=activation,
+        model_input=activation2,
         vocab_size=vocab_size,
         is_training=is_training,
         **unused_params)
