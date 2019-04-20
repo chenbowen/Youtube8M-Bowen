@@ -4,12 +4,29 @@
 
 
 sudo apt-get update
-sudo apt-get install openjdk-8-jdk git python-dev python3-dev python-numpy python3-numpy build-essential python-pip python3-pip python-virtualenv swig python-wheel libcurl3-dev curl -y  
-curl -O http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/cuda-repo-ubuntu1604_9.0.176-1_amd64.deb
-sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub
-sudo dpkg -i ./cuda-repo-ubuntu1604_9.0.176-1_amd64.deb
-sudo apt-get update
-sudo apt-get install cuda-9-0 -y
+sudo apt-get install vim csh flex gfortran libgfortran3 g++ \
+                     cmake xorg-dev patch zlib1g-dev libbz2-dev \
+                     libboost-all-dev openssh-server libcairo2 \
+                     libcairo2-dev libeigen3-dev lsb-core \
+                     lsb-base net-tools network-manager \
+                     git-core git-gui git-doc xclip gdebi-core\
+                     build-essential dkms \
+                     freeglut3 freeglut3-dev libxi-dev libxmu-dev -y
+
+https://www.nvidia.in/Download/index.aspx?lang=en-in
+
+wget http://in.download.nvidia.com/XFree86/Linux-x86_64/418.56/NVIDIA-Linux-x86_64-418.56.run
+wget http://in.download.nvidia.com/tesla/410.104/NVIDIA-Linux-x86_64-410.104.run
+wget http://in.download.nvidia.com/XFree86/Linux-x86_64/418.56/NVIDIA-Linux-x86_64-418.56.run
+
+chmod +x NVIDIA-Linux-x86_64-410.93.run
+sudo ./NVIDIA-Linux-x86_64-410.93.run
+
+
+wget https://developer.nvidia.com/compute/cuda/10.0/Prod/local_installers/cuda_10.0.130_410.48_linux
+chmod +x cuda_10.0.130_410.48_linux
+sudo ./cuda_10.0.130_410.48_linux
+
 sudo reboot
 
 wget https://s3.amazonaws.com/open-source-william-falcon/cudnn-9.0-linux-x64-v7.1.tgz  
