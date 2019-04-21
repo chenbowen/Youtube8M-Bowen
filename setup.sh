@@ -19,14 +19,16 @@ wget http://in.download.nvidia.com/XFree86/Linux-x86_64/418.56/NVIDIA-Linux-x86_
 wget http://in.download.nvidia.com/tesla/410.104/NVIDIA-Linux-x86_64-410.104.run
 wget http://in.download.nvidia.com/XFree86/Linux-x86_64/418.56/NVIDIA-Linux-x86_64-418.56.run
 
-chmod +x NVIDIA-Linux-x86_64-410.93.run
-sudo ./NVIDIA-Linux-x86_64-410.93.run
+chmod +x NVIDIA-Linux-x86_64-418.56.run
+sudo ./NVIDIA-Linux-x86_64-418.56.run
 
 
 wget https://developer.nvidia.com/compute/cuda/10.0/Prod/local_installers/cuda_10.0.130_410.48_linux
 chmod +x cuda_10.0.130_410.48_linux
 sudo ./cuda_10.0.130_410.48_linux
-
+export PATH="/usr/local/cuda/bin:$PATH"
+export LD_LIBRARY_PATH="/usr/local/cuda/lib64:$LD_LIBRARY_PATH"
+source ~/.bashrc
 sudo reboot
 
 wget https://s3.amazonaws.com/open-source-william-falcon/cudnn-9.0-linux-x64-v7.1.tgz  
