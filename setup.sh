@@ -11,7 +11,8 @@ sudo apt-get install vim csh flex gfortran libgfortran3 g++ \
                      lsb-base net-tools network-manager \
                      git-core git-gui git-doc xclip gdebi-core\
                      build-essential dkms \
-                     freeglut3 freeglut3-dev libxi-dev libxmu-dev -y
+                     freeglut3 freeglut3-dev libxi-dev libxmu-dev \
+                     python3-pip -y
 
 https://www.nvidia.in/Download/index.aspx?lang=en-in
 
@@ -26,27 +27,40 @@ sudo ./NVIDIA-Linux-x86_64-418.56.run
 wget https://developer.nvidia.com/compute/cuda/10.0/Prod/local_installers/cuda_10.0.130_410.48_linux
 chmod +x cuda_10.0.130_410.48_linux
 sudo ./cuda_10.0.130_410.48_linux
-
+gedit ~/.profile
 export PATH="/usr/local/cuda/bin:$PATH"
 export LD_LIBRARY_PATH="/usr/local/cuda/lib64:$LD_LIBRARY_PATH"
 source ~/.bashrc
+
 sudo reboot
 
-wget https://s3.amazonaws.com/open-source-william-falcon/cudnn-9.0-linux-x64-v7.1.tgz  
-sudo tar -xzvf cudnn-9.0-linux-x64-v7.1.tgz  
-sudo cp cuda/include/cudnn.h /usr/local/cuda/include
-sudo cp cuda/lib64/libcudnn* /usr/local/cuda/lib64
-sudo chmod a+r /usr/local/cuda/include/cudnn.h /usr/local/cuda/lib64/libcudnn*
+https://developer.nvidia.com/rdp/cudnn-download
+wget https://developer.nvidia.com/compute/machine-learning/cudnn/secure/v7.5.0.56/prod/10.0_20190219/cudnn-10.0-linux-x64-v7.5.0.56.tgz 
+cd Download
+sudo tar -xzvf cudnn-10.0-linux-x64-v7.5.0.56.tgz 
+sudo cp -P ./cuda/lib64/* /usr/local/cuda/lib64/
+sudo cp  ./cuda/include/* /usr/local/cuda/include
+sudo chmod a+r /usr/local/cuda/include/cudnn.h
+gedit ~/.profile
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64"
 export CUDA_HOME=/usr/local/cuda
 source ~/.bashrc
-wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh   
 
-source ~/.bashrc
-conda create -n tensorflow -y
-source activate tensorflow
-pip install tensorflow-gpu
+sudo pip3 install virtualenv 
+virtualenv -p python3.6 pytorch
+source pytorch/bin/activate
+pip3 install https://download.pytorch.org/whl/cu100/torch-1.0.1.post2-cp36-cp36m-linux_x86_64.whl
+pip3 install torchvision
+
+git clone https://github.com/daniilidis-group/neural_renderer.git
+cd neural_renderer
+pip3 install .
+# wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+# bash Miniconda3-latest-Linux-x86_64.sh   
+# source ~/.bashrc
+# conda create -n tensorflow -y
+# source activate tensorflow
+# pip install tensorflow-gpu
 rm cuda-repo-ubuntu1604_9.0.176-1_amd64.deb
 rm Miniconda3-latest-Linux-x86_64.sh
 rm cudnn-9.0-linux-x64-v7.1.tgz
@@ -60,13 +74,10 @@ cd youtube-8m
 vi ~/.vimrc
 iset number
 
-#vi ~/startup.txt
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64"
-export CUDA_HOME=/usr/local/cuda
-source ~/.bashrc
-cd ~/miniconda3/bin
-source activate tensorflow
-cd ~/yt8m/code/youtube-8m/
+
+# cd ~/miniconda3/bin
+# source activate tensorflow
+# cd ~/yt8m/code/youtube-8m/
 
 
 
